@@ -1,8 +1,8 @@
 use Mix.Config
 
 config :logger,
-  backends: [{LoggerFileBackend, :dev_backend}],
-  level: :info,
+  backends: [:console],
+  level: :debug,
   format: "$time $metadata[$level] $message\n"
 
 config :logger, :dev_backend,

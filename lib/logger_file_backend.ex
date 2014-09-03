@@ -10,6 +10,7 @@ defmodule LoggerFileBackend do
 
 
   @default_format "$time $metadata[$level] $message\n"
+  @default_check_interval 10 * 1000 * 1000
 
   def init({__MODULE__, name}) do
     {:ok, configure(name, [])}
@@ -27,7 +28,7 @@ defmodule LoggerFileBackend do
 
 
   def handle_event({level, _gl, {Logger, msg, ts, md}}, %{level: min_level} = state) do
-    if nil?(min_level) or Logger.compare_levels(level, min_level) != :lt do
+    if is_nil(min_level) or Logger.compare_levels(level, min_level) != :lt do
       log_event(level, msg, ts, md, state)
     else
       {:ok, state}
@@ -44,14 +45,15 @@ defmodule LoggerFileBackend do
   defp log_event(level, msg, ts, md, %{path: path, io_device: nil} = state) when is_binary(path) do
     case open_log(path) do
       {:ok, io_device, inode} ->
-        log_event(level, msg, ts, md, %{state | io_device: io_device, inode: inode})
+        log_event(level, msg, ts, md, %{state | io_device: io_device, inode: inode, last_check: :erlang.now()})
       _other ->
         {:ok, state}
     end
   end
 
-  defp log_event(level, msg, ts, md, %{path: path, io_device: io_device, inode: inode} = state) when is_binary(path) do
-    if !nil?(inode) and inode == inode(path) do
+  defp log_event(level, msg, ts, md, %{
+    path: path, io_device: io_device, inode: inode, last_check: last_check, check_interval: check_interval} = state) when is_binary(path) do
+    if !is_nil(inode) and inode == check_inode(path, inode, last_check, check_interval) do
       IO.write(io_device, format_event(level, msg, ts, md, state))
       {:ok, state}
     else
@@ -77,6 +79,15 @@ defmodule LoggerFileBackend do
   end
 
 
+  defp check_inode(path, old_inode, last_check, check_interval) do
+    diff = :timer.now_diff(:erlang.now(), last_check)
+    if diff > check_interval do
+      inode(path)
+    else
+      old_inode
+    end
+  end
+
   defp inode(path) do
     case File.stat(path) do
       {:ok, %File.Stat{inode: inode}} -> inode
@@ -94,7 +105,18 @@ defmodule LoggerFileBackend do
     metadata = Keyword.get(opts, :metadata, [])
     format   = Keyword.get(opts, :format, @default_format) |> Logger.Formatter.compile
     path     = Keyword.get(opts, :path)
+    interval = Keyword.get(opts, :check_interval, @default_check_interval)
 
-    %{name: name, path: path, io_device: nil, inode: nil, format: format, level: level, metadata: metadata}
+    %{
+      name: name, 
+      path: path, 
+      io_device: nil, 
+      inode: nil, 
+      format: format, 
+      level: level, 
+      metadata: metadata,
+      check_interval: interval,
+      last_check: :erlang.now(),
+    }
   end
 end
