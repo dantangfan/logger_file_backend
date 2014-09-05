@@ -34,6 +34,13 @@ defmodule LoggerFileBackendTest do
     Logger.debug("hello")
     assert log =~ "hello [debug]"
   end
+  
+  test "can log unicode" do
+    config format: "$message\n"
+
+    Logger.debug("你好")
+    assert log =~ "你好"
+  end
 
   test "can configure metadata" do
     config format: "$metadata$message\n", metadata: [:user_id]

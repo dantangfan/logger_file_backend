@@ -9,7 +9,7 @@ defmodule LoggerFileBackend do
   @type metadata  :: [atom]
 
 
-  @default_format "$time $metadata[$level] $message\n"
+  @default_format "$date $time $metadata[$level] $message\n"
   @default_check_interval 10 * 1000 * 1000
 
   def init({__MODULE__, name}) do
@@ -65,7 +65,7 @@ defmodule LoggerFileBackend do
   defp open_log(path) do
     case (path |> Path.dirname |> File.mkdir_p) do
       :ok ->
-        case File.open(path, [:append]) do
+        case File.open(path, [:append, {:encoding, :utf8}]) do
           {:ok, io_device} -> {:ok, io_device, inode(path)}
           other -> other
         end
