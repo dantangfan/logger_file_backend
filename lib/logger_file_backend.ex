@@ -45,7 +45,7 @@ defmodule LoggerFileBackend do
   defp log_event(level, msg, ts, md, %{path: path, io_device: nil} = state) when is_binary(path) do
     case open_log(path) do
       {:ok, io_device, inode} ->
-        log_event(level, msg, ts, md, %{state | io_device: io_device, inode: inode, last_check: :erlang.now()})
+        log_event(level, msg, ts, md, %{state | io_device: io_device, inode: inode, last_check: :erlang.timestamp()})
       _other ->
         {:ok, state}
     end
@@ -80,7 +80,7 @@ defmodule LoggerFileBackend do
 
 
   defp check_inode(path, old_inode, last_check, check_interval) do
-    diff = :timer.now_diff(:erlang.now(), last_check)
+    diff = :timer.now_diff(:erlang.timestamp(), last_check)
     if diff > check_interval do
       inode(path)
     else
@@ -116,7 +116,7 @@ defmodule LoggerFileBackend do
       level: level, 
       metadata: metadata,
       check_interval: interval,
-      last_check: :erlang.now(),
+      last_check: :erlang.timestamp(),
     }
   end
 end
