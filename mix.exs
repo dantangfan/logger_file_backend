@@ -4,10 +4,10 @@ defmodule LoggerFileBackend.Mixfile do
   def project do
     [app: :logger_file_backend,
      version: "0.0.3",
-     elixir: "~> 1.0.0",
-     description: description,
-     package: package,
-     deps: deps]
+     elixir: "> 1.0.0",
+     description: description(),
+     package: package(),
+     deps: deps()]
   end
 
   # Configuration for the OTP application

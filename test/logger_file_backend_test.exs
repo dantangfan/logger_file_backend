@@ -10,7 +10,7 @@ defmodule LoggerFileBackendTest do
   setup do
     config [path: "test/logs/test.log", level: :debug]
     on_exit fn ->
-      path && File.rm_rf!(Path.dirname(path))
+      path() && File.rm_rf!(Path.dirname(path()))
     end
   end
 
@@ -24,42 +24,42 @@ defmodule LoggerFileBackendTest do
   test "creates log file" do
     #refute File.exists?(path)
     Logger.debug("this is a msg")
-    assert File.exists?(path)
-    assert log =~ "this is a msg"
+    assert File.exists?(path())
+    assert log() =~ "this is a msg"
   end
 
   test "can configure format" do
     config format: "$message [$level]\n"
 
     Logger.debug("hello")
-    assert log =~ "hello [debug]"
+    assert log() =~ "hello [debug]"
   end
   
   test "can log unicode" do
     config format: "$message\n"
 
     Logger.debug("你好")
-    assert log =~ "你好"
+    assert log() =~ "你好"
   end
 
   test "can configure metadata" do
     config format: "$metadata$message\n", metadata: [:user_id]
 
     Logger.debug("hello")
-    assert log =~ "hello"
+    assert log() =~ "hello"
 
     Logger.metadata(user_id: 11)
     Logger.metadata(user_id: 13)
 
     Logger.debug("user_id=13 hello")
-    assert log =~ "hello"
+    assert log() =~ "hello"
   end
 
   test "can configure level" do
     config level: :info
 
     Logger.debug("hello")
-    refute File.exists?(path)
+    refute File.exists?(path())
   end
 
   test "logs to file after old has been moved" do
@@ -67,13 +67,13 @@ defmodule LoggerFileBackendTest do
 
     Logger.debug "foo"
     Logger.debug "bar"
-    assert log == "foo\nbar\n"
+    assert log() == "foo\nbar\n"
 
-    {"", 0} = System.cmd("mv", [path, path <> ".1"])
+    {"", 0} = System.cmd("mv", [path(), path() <> ".1"])
     
     Logger.debug "biz"
     Logger.debug "baz"
-    assert log == "biz\nbaz\n"
+    assert log() == "biz\nbaz\n"
   end
 
   defp path do
@@ -82,7 +82,7 @@ defmodule LoggerFileBackendTest do
   end
 
   defp log do
-    File.read!(path)
+    File.read!(path())
   end
 
   defp config(opts) do
