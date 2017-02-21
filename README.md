@@ -8,7 +8,7 @@ used in conjunction with external log rotation.
 If you want a simple rotation by log size, config the following
 
 * rotate - rotate mod, default false, if you want to rotate set true
-* max_logsize - by default 1024*1024*1024 = 1G
+* max_logsize - by default 1024\*1024\*1024 = 1G
 * backlog - number of the backup logs, by default 30
 
 **Note** The following of file renames does not work on Windows, because `File.Stat.inode` is used to determine whether the log file has been (re)moved and, on non-Unix, `File.Stat.inode` is always 0.
